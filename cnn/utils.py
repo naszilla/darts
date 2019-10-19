@@ -59,7 +59,7 @@ class Cutout(object):
         return img
 
 
-def _data_transforms_cifar10(args):
+def _data_transforms_cifar10(cutout, cutout_length):
   CIFAR_MEAN = [0.49139968, 0.48215827, 0.44653124]
   CIFAR_STD = [0.24703233, 0.24348505, 0.26158768]
 
@@ -69,8 +69,8 @@ def _data_transforms_cifar10(args):
     transforms.ToTensor(),
     transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
   ])
-  if args.cutout:
-    train_transform.transforms.append(Cutout(args.cutout_length))
+  if cutout:
+    train_transform.transforms.append(Cutout(cutout_length))
 
   valid_transform = transforms.Compose([
     transforms.ToTensor(),
@@ -95,8 +95,10 @@ def save(model, model_path):
   torch.save(model.state_dict(), model_path)
 
 
-def load(model, model_path):
-  model.load_state_dict(torch.load(model_path))
+def load(model, model_path, gpu_id):
+  ml = 'cuda:{}'.format(gpu_id) if torch.cuda.is_available() else 'cpu'
+  model.load_state_dict(torch.load(model_path, map_location = ml), strict=False)
+
 
 
 def drop_path(x, drop_prob):

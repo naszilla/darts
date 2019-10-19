@@ -55,24 +55,27 @@ CIFAR_CLASSES = 10
 
 
 def main():
-  if not torch.cuda.is_available():
-    logging.info('no gpu device available')
-    sys.exit(1)
 
   np.random.seed(args.seed)
   random.seed(args.seed)
-  torch.cuda.set_device(args.gpu)
-  cudnn.benchmark = False
-  torch.manual_seed(args.seed)
-  cudnn.enabled=True
-  cudnn.deterministic=True
-  torch.cuda.manual_seed(args.seed)
-  logging.info('gpu device = %d' % args.gpu)
-  logging.info("args = %s", args)
 
+  if torch.cuda.is_available():
+    device = torch.device('cuda:{}'.format(args.gpu))
+    cudnn.benchmark = False
+    torch.manual_seed(args.seed)
+    cudnn.enabled = True
+    cudnn.deterministic = True
+    torch.cuda.manual_seed(args.seed)
+    logging.info('gpu device = %d' % args.gpu)
+  else:
+    device = torch.device('cpu')
+    logging.info('No gpu device available')
+    torch.manual_seed(args.seed)
+
+  logging.info("args = %s", args)
   genotype = eval("genotypes.%s" % args.arch)
   model = Network(args.init_channels, CIFAR_CLASSES, args.layers, args.auxiliary, genotype)
-  model = model.cuda()
+  model = model.to(device)
 
   logging.info("param size = %fMB", utils.count_parameters_in_MB(model))
   total_params = sum(x.data.nelement() for x in model.parameters())
@@ -87,7 +90,7 @@ def main():
       weight_decay=args.weight_decay
       )
 
-  train_transform, valid_transform = utils._data_transforms_cifar10(args)
+  train_transform, valid_transform = utils._data_transforms_cifar10(args.cutout, args.cutout_length)
   train_data = dset.CIFAR10(root=args.data, train=True, download=True, transform=train_transform)
   valid_data = dset.CIFAR10(root=args.data, train=False, download=True, transform=valid_transform)
 
@@ -104,10 +107,10 @@ def main():
     logging.info('epoch %d lr %e', epoch, scheduler.get_lr()[0])
     model.drop_path_prob = args.drop_path_prob * epoch / args.epochs
 
-    train_acc, train_obj = train(train_queue, model, criterion, optimizer)
+    train_acc, train_obj = train(train_queue, model, criterion, optimizer, args.gpu)
     logging.info('train_acc %f', train_acc)
 
-    valid_acc, valid_obj = infer(valid_queue, model, criterion)
+    valid_acc, valid_obj = infer(valid_queue, model, criterion, args.gpu)
     logging.info('valid_acc %f', valid_acc)
 
     scheduler.step()
@@ -115,15 +118,19 @@ def main():
     utils.save(model, os.path.join(args.save, 'weights.pt'))
 
 
-def train(train_queue, model, criterion, optimizer):
+def train(train_queue, model, criterion, optimizer, gpu_id=0):
   objs = utils.AvgrageMeter()
   top1 = utils.AvgrageMeter()
   top5 = utils.AvgrageMeter()
   model.train()
 
+  device = torch.device('cuda:{}'.format(gpu_id) if torch.cuda.is_available() \
+    else 'cpu')
+
+
   for step, (input, target) in enumerate(train_queue):
-    input = Variable(input).cuda()
-    target = Variable(target).cuda(non_blocking=True)
+    input = Variable(input).to(device)
+    target = Variable(target).to(device)
 
     optimizer.zero_grad()
     logits, logits_aux = model(input)
@@ -139,7 +146,7 @@ def train(train_queue, model, criterion, optimizer):
     n = input.size(0)
     objs.update(loss.item(), n)
     top1.update(prec1.item(), n)
-    top5.update(prec5.item(), n)
+    top5.update(prec5.item(), n) 
 
     if step % args.report_freq == 0:
       logging.info('train %03d %e %f %f', step, objs.avg, top1.avg, top5.avg)
@@ -147,15 +154,18 @@ def train(train_queue, model, criterion, optimizer):
   return top1.avg, objs.avg
 
 
-def infer(valid_queue, model, criterion):
+def infer(valid_queue, model, criterion, gpu_id=0):
   objs = utils.AvgrageMeter()
   top1 = utils.AvgrageMeter()
   top5 = utils.AvgrageMeter()
   model.eval()
 
+  device = torch.device('cuda:{}'.format(gpu_id) if torch.cuda.is_available() \
+    else 'cpu')
+
   for step, (input, target) in enumerate(valid_queue):
-    input = Variable(input, volatile=True).cuda()
-    target = Variable(target, volatile=True).cuda(non_blocking=True)
+    input = Variable(input, volatile=True).to(device)
+    target = Variable(target, volatile=True).to(device)
 
     logits, _ = model(input)
     loss = criterion(logits, target)

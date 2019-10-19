@@ -42,16 +42,17 @@ CIFAR_CLASSES = 10
 def main():
 
   np.random.seed(args.seed)
-  device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
   if torch.cuda.is_available():
     device = torch.device('cuda:{}'.format(args.gpu))
     cudnn.benchmark = True
     torch.manual_seed(args.seed)
-    cudnn.enabled=True
+    cudnn.enabled = True
+    cudnn.deterministic = True
     torch.cuda.manual_seed(args.seed)
     logging.info('gpu device = %d' % args.gpu)
   else:
+    device = torch.device('cpu')
     logging.info('No gpu device available')
     torch.manual_seed(args.seed)
 
@@ -77,13 +78,14 @@ def main():
   logging.info('test_acc %f', test_acc)
 
 
-def infer(test_queue, model, criterion, gpu_id):
+def infer(test_queue, model, criterion, gpu_id=0):
   objs = utils.AvgrageMeter()
   top1 = utils.AvgrageMeter()
   top5 = utils.AvgrageMeter()
   model.eval()
 
-  device = torch.device('cuda:{}'.format(gpu_id) if torch.cuda.is_available() else 'cpu')
+  device = torch.device('cuda:{}'.format(gpu_id) if torch.cuda.is_available() \
+    else 'cpu')
 
   for step, (input, target) in enumerate(test_queue):
     input = Variable(input, volatile=True).to(device)

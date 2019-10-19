@@ -1,6 +1,10 @@
-This fork of DARTS is used for the paper "Random Search and Reproducibility for NAS."
 
-Our modifications add deterministic training for the CNN benchmark and also allow for training shared weights with discrete architectures.
+
+
+This fork of DARTS adds changes to be compatible with PyTorch 1.2.0 and to allow training/testing architectures on a CPU.
+
+This fork builds off of liamcli/darts, which added deterministic training.
+
 
 # Differentiable Architecture Search
 Code accompanying the paper

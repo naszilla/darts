@@ -48,10 +48,10 @@ class Train:
     self.CIFAR_CLASSES = 10
 
 
-  def main(self, arch, epochs=600, gpu=0, load_weights=False, train_portion=0.7, seed=0, save='train-from-scratch'):
+  def main(self, arch, epochs=600, gpu=0, load_weights=False, train_portion=0.7, seed=0, save='EXP'):
 
     # Set up save file and logging
-    self.save = save
+    self.save = args.save = 'eval-{}-{}'.format(save, time.strftime("%Y%m%d-%H%M%S"))
     utils.create_exp_dir(self.save, scripts_to_save=glob.glob('*.py'))
     log_format = '%(asctime)s %(message)s'
     logging.basicConfig(stream=sys.stdout, level=logging.INFO,
@@ -162,7 +162,7 @@ class Train:
 
       utils.save(model, os.path.join(self.save, 'weights-new.pt'))
 
-      if epoch in (45, 46, 47, 48, 49):
+      if epoch in list(range(max(0, epochs - 5), epochs)):
         valid_accs.append((epoch, valid_acc))
         test_accs.append((epoch, test_acc))
 

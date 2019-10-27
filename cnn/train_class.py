@@ -51,7 +51,7 @@ class Train:
   def main(self, arch, epochs=600, gpu=0, load_weights=False, train_portion=0.7, seed=0, save='EXP'):
 
     # Set up save file and logging
-    self.save = args.save = 'eval-{}-{}'.format(save, time.strftime("%Y%m%d-%H%M%S"))
+    self.save = 'eval-{}-{}'.format(save, time.strftime("%Y%m%d-%H%M%S"))
     utils.create_exp_dir(self.save, scripts_to_save=glob.glob('*.py'))
     log_format = '%(asctime)s %(message)s'
     logging.basicConfig(stream=sys.stdout, level=logging.INFO,

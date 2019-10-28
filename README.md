@@ -4,7 +4,7 @@
 This fork of DARTS adds changes to be compatible with PyTorch 1.2.0 and to allow training/testing architectures on a CPU.
 It builds off of liamcli/darts, which added deterministic training.
 
-This fork is used for the paper, [BANANAS: Bayesian Optimization with Neural Architectures for Neural Architecture Search](https://arxiv.org/abs/1910.11858). The code is at github.com/naszilla/bananas.
+This fork is used for the paper, [BANANAS: Bayesian Optimization with Neural Architectures for Neural Architecture Search](https://arxiv.org/abs/1910.11858). The code is at [https://github.com/naszilla/bananas](https://github.com/naszilla/bananas).
 
 # Differentiable Architecture Search
 Code accompanying the paper

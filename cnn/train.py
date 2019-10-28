@@ -98,7 +98,7 @@ def main():
       train_data, batch_size=args.batch_size, shuffle=True, pin_memory=True, num_workers=0)
 
   valid_queue = torch.utils.data.DataLoader(
-      valid_data, batch_size=48, shuffle=False, pin_memory=True, num_workers=0)
+      valid_data, batch_size=args.batch_size // 2, shuffle=False, pin_memory=True, num_workers=0)
 
   scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, float(args.epochs))
 

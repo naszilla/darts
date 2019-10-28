@@ -125,12 +125,12 @@ class Train:
 
     if self.validation_set:
       valid_queue = torch.utils.data.DataLoader(
-          train_data, batch_size=self.batch_size,
+          train_data, batch_size=self.batch_size // 2,
           sampler=torch.utils.data.sampler.SubsetRandomSampler(indices[split:num_train]),
           pin_memory=True, num_workers=0)    
 
     test_queue = torch.utils.data.DataLoader(
-        test_data, batch_size=self.batch_size, shuffle=False, pin_memory=True, num_workers=0)
+        test_data, batch_size=self.batch_size // 2, shuffle=False, pin_memory=True, num_workers=0)
 
     if self.load_weights:
       logging.info('loading saved weights')
